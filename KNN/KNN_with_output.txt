@@ -1,0 +1,106 @@
+voice <- read.csv("C:/Users/pawar/Downloads/voice.csv/voice.csv")
+
+> voice[,21] <- as.numeric(voice[,21])
+> maxs <- apply(voice, 2, max)
+> mins <- apply(voice, 2, min)
+> voice <- as.data.frame(scale(voice, center = mins, scale = maxs - mins))
+> voice$label <- factor(voice$label)
+> library(ISLR)
+> library(caret)
+
+Loading required package: lattice
+Loading required package: ggplot2
+
+> set.seed(300)
+> indxTrain <- createDataPartition(y = voice$label,p = 0.75,list = FALSE)
+> training <- voice[indxTrain,]
+> testing <- voice[-indxTrain,]
+> prop.table(table(training$label)) * 100
+> prop.table(table(testing$label)) * 100
+> prop.table(table(voice$label)) * 100
+> set.seed(400)
+> ctrl <- trainControl(method="repeatedcv",repeats = 3)
+> knnFit <- train(label ~ ., data = training, method = "knn", trControl = ctrl, preProcess = c("center","scale"), tuneLength = 20)
+> knnFit
+k-Nearest Neighbors 
+
+2376 samples
+  20 predictor
+   2 classes: '0', '1' 
+
+Pre-processing: centered (20), scaled (20) 
+Resampling: Cross-Validated (10 fold, repeated 3 times) 
+Summary of sample sizes: 2138, 2138, 2139, 2139, 2139, 2138, ... 
+Resampling results across tuning parameters:
+
+  k   Accuracy   Kappa    
+   5  0.9667588  0.9335170
+   7  0.9673190  0.9346376
+   9  0.9661980  0.9323955
+  11  0.9657767  0.9315525
+  13  0.9626913  0.9253822
+  15  0.9617097  0.9234188
+  17  0.9593187  0.9186379
+  19  0.9586172  0.9172344
+  21  0.9560933  0.9121864
+  23  0.9524435  0.9048871
+  25  0.9507575  0.9015151
+  27  0.9493540  0.8987085
+  29  0.9485113  0.8970226
+  31  0.9482324  0.8964640
+  33  0.9471096  0.8942181
+  35  0.9458473  0.8916949
+  37  0.9452883  0.8905767
+  39  0.9452865  0.8905738
+  41  0.9445850  0.8891707
+  43  0.9445862  0.8891734
+
+Accuracy was used to select the optimal model using  the largest value.
+The final value used for the model was k = 7. 
+> plot(knnFit)
+> knnPredict <- predict(knnFit,newdata = testing )
+> confusionMatrix(knnPredict, testing$label )
+Confusion Matrix and Statistics
+
+          Reference
+Prediction   0   1
+         0 379   3
+         1  17 393
+                                          
+               Accuracy : 0.9747          
+                 95% CI : (0.9613, 0.9845)
+    No Information Rate : 0.5             
+    P-Value [Acc > NIR] : < 2e-16         
+                                          
+                  Kappa : 0.9495          
+ Mcnemar's Test P-Value : 0.00365         
+                                          
+            Sensitivity : 0.9571          
+            Specificity : 0.9924          
+         Pos Pred Value : 0.9921          
+         Neg Pred Value : 0.9585          
+             Prevalence : 0.5000          
+         Detection Rate : 0.4785          
+   Detection Prevalence : 0.4823          
+      Balanced Accuracy : 0.9747          
+                                          
+       'Positive' Class : 0               
+                                          
+> library(pROC)
+Type 'citation("pROC")' for a citation.
+
+Attaching package: ‘pROC’
+
+The following objects are masked from ‘package:stats’:
+
+    cov, smooth, var 
+> knnPredict <- predict(knnFit,newdata = testing , type="prob")
+> knnROC <- roc(testing$label,knnPredict[,"1"], levels = rev(testing$label))
+> plot(knnROC)
+
+Call:
+roc.default(response = testing$label, predictor = knnPredict[,     "1"], levels = rev(testing$label))
+
+Data: knnPredict[, "1"] in 396 controls (testing$label 1) < 396 cases (testing$label 1).
+Area under the curve: 0.5
+> 
