@@ -1,0 +1,234 @@
+
+#SVM
+
+# CSV file I/O, e.g. the read_csv function
+library(readr) 
+library(e1071)
+library(adabag)
+#File Reading
+voice <- read.csv("C:/Users/gfogl/Desktop/Study/Machinelearning/Project/voicegender/voice.csv")
+
+#Scaling the data
+voice[,21] <- as.numeric(voice[,21])
+maxs <- apply(voice, 2, max)
+mins <- apply(voice, 2, min)
+voice <- as.data.frame(scale(voice, center = mins, scale = maxs - mins))
+voice$label <- factor(voice$label)
+
+set.seed(1892)
+
+trainIndex <- sample(1:nrow(voice), 0.80 * nrow(voice))
+train <- subset(voice[trainIndex,])
+test <- subset(voice[-trainIndex, 1:20])
+test_label <- voice[-trainIndex, 21]
+
+#creating a basic model
+svm_model <- svm(label ~ ., data=train)
+summary(svm_model)
+
+#calculating the accuracy
+#Train accuracy
+pred <- predict(svm_model,train[,-21])
+table(pred,train[,21])
+mean(pred == train[,21])*100
+
+#Test accuracy
+pred <- predict(svm_model,test)
+table(pred,test_label)
+mean(pred == test_label)*100
+
+#now tuning the model with 10 cross-validation folds.
+svm_tune <- tune(svm, train.x=train[,-21], train.y=train$label, kernel="radial", ranges=list(cost=10^(-1:2), gamma=c(.5,1,2)))
+
+#finding best parameters
+print(svm_tune)
+svm_tune$best.parameters$cost
+svm_tune$best.parameters$gamma
+
+#remaking the model with the best parameters
+svm_model_after_tune <- svm(label ~ ., data=train, kernel="radial", cost=svm_tune$best.parameters$cost, gamma=svm_tune$best.parameters$gamma)
+summary(svm_model_after_tune)
+
+#re-calculating the accuracy
+#Train accuracy
+pred <- predict(svm_model_after_tune,train[,-21])
+table(pred,train[,21])
+mean(pred == train[,21])*100
+
+#Test accuracy
+pred <- predict(svm_model_after_tune,test)
+table(pred,test_label)
+mean(pred == test_label)*100
+mat <- confusionMatrix(pred, test_label)
+
+#ROC AND AUC
+library(e1071)
+svm_model_after_tune <- svm(label ~ ., data=train, kernel="radial", cost=svm_tune$best.parameters$cost, gamma=svm_tune$best.parameters$gamma, probability=TRUE)
+pred <- predict(svm_model_after_tune, test, probability = TRUE)
+
+svmPred <- prediction(attr(pred, "probabilities")[,2], test_label)
+svmROC <- performance(svmPred,"tpr","fpr")
+plot(svmROC)
+svmAUC <- performance(svmPred,"auc")
+svmAUC@y.values
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Random Forest
+
+RandomForestData=read.csv(file="C:/Users/sri21arun/Desktop/UTD/Machine Learning/Project/voice.csv")
+
+library(class)
+library(AUC)
+library(caret)
+library(gbm)
+library(verification)
+library(pROC)
+library(AUCRF)
+library(randomForest)
+
+index <- sample(1:nrow(RandomForestData),0.8*nrow(RandomForestData))
+train <- RandomForestData[index,]
+test <- RandomForestData[-index,]
+
+rf_tune <- tuneRF(train[,-21],train[,21],stepFactor = 1.5,improve = 1e-5,ntreeTry = 500)
+
+#rf_tune
+# Random Forest classifier
+fit=randomForest(as.factor(label)~.,data=train,ntree=500,mtry=4,importance=TRUE)
+prediction1=predict(fit,test,type="response")
+
+predtable=table(prediction1,test[,21])
+accuracy1=sum(diag(predtable)/sum(predtable))*100
+print(paste("Accuracy",accuracy1))
+#Precision
+precs=(sum(diag(predtable))/(sum(diag(predtable))+predtable[3]))*100
+print(paste("Precision",precs))
+
+
+#AUC
+library(ROCR)
+pr = predict(fit,RandomForestData,type="prob")[,2]
+auc1 <- performance(prediction(pr,RandomForestData$label),"auc")@y.values[[1]]
+roc1 <- performance(prediction(pr,RandomForestData$label),"tpr","fpr")
+plot(roc1)
+accuracy2 <- auc1*100
+print(paste("AUC Accuracy",accuracy2))
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#knn
+
+voice <- read.csv("C:/Users/pawar/Downloads/voice.csv/voice.csv")
+
+> voice[,21] <- as.numeric(voice[,21])
+> maxs <- apply(voice, 2, max)
+> mins <- apply(voice, 2, min)
+> voice <- as.data.frame(scale(voice, center = mins, scale = maxs - mins))
+> voice$label <- factor(voice$label)
+> library(ISLR)
+> library(caret)
+
+> set.seed(300)
+> indxTrain <- createDataPartition(y = voice$label,p = 0.75,list = FALSE)
+> training <- voice[indxTrain,]
+> testing <- voice[-indxTrain,]
+> prop.table(table(training$label)) * 100
+> prop.table(table(testing$label)) * 100
+> prop.table(table(voice$label)) * 100
+> set.seed(400)
+> ctrl <- trainControl(method="repeatedcv",repeats = 3)
+> knnFit <- train(label ~ ., data = training, method = "knn", trControl = ctrl, preProcess = c("center","scale"), tuneLength = 20)
+
+> plot(knnFit)
+> knnPredict <- predict(knnFit,newdata = testing )
+> confusionMatrix(knnPredict, testing$label )
+
+> library(pROC)
+> knnPredict <- predict(knnFit,newdata = testing , type="prob")
+> knnROC <- roc(testing$label,knnPredict[,"1"], levels = rev(testing$label))
+> plot(knnROC)
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Ann
+
+library(neuralnet)
+voice <- read.csv("/Users/aditighamandi/Desktop/MLproject/voice.csv")
+voice[,21] <- as.numeric(voice[,21])
+maxs <- apply(voice, 2, max)
+mins <- apply(voice, 2, min)
+voice <- as.data.frame(scale(voice, center = mins, scale = maxs - mins))
+voice$label <- factor(voice$label)
+library(caret)
+indextrain <- createDataPartition(y = voice$label,times = 1,p = 0.8,list=FALSE)
+training <- voice[indextrain,]
+testing <- voice[-indextrain,]
+?train
+train <- createFolds(training$label, k=10, returnTrain = FALSE )
+nnetFit <- train(label ~ ., method = "nnet", data = voice,
+                 tuneLength = 5,
+                 trControl = trainControl(
+                   method = "cv", indexOut = train))
+nnetFit
+nnetFit$finalModel
+plot(nnetFit)
+pred<-predict(nnetFit,newdata=testing)
+confusionMatrix(pred, testing$label)
+
+recall(pred, testing$label)
+precision(pred, testing$label)
+
+
+library(pROC)
+nnetPredict <- predict(nnetFit,newdata = testing,type="raw")
+nnetROC <- multiclass.roc(testing$label,as.numeric(nnetPredict))
+nnetROC
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#GLM
+
+#install packages
+install.packages("stats")
+library(stats)
+install.packages("caTools")
+install.packages("rpart")
+install.packages("rpart.plot")
+library(rpart)
+library(rpart.plot)
+library(caTools)
+
+#read the dataset
+  voice <- read.csv("C:/Users/Kavya Gupta/Desktop/voice.csv", header=FALSE)
+  k=10
+#cross validating 
+  folds <- cut(seq(1,nrow(voice)),breaks=k,labels=FALSE)
+  for(i in 1:k)
+  {
+  test_index <- which(folds==i, arr.ind = TRUE)
+  testData <- voice[test_index,]
+  trainingData <- voice[-test_index,]
+  model <- glm(as.factor(V1) ~.,family=binomial(link='logit'),data= trainingData)
+  prediction <- predict(model,newdata=testData,type='response')
+  prediction.results <- ifelse(prediction> 0.25,2,1)
+  tab <- table(testData$V1,prediction.results)
+  train_accuracy<-sum(diag(tab))/sum((tab))
+  precision_test<-sum(tab[1,1])/sum(tab[1,1]+sum(tab[2,1]))
+  recall<-sum(tab[1,1])/sum(tab[1,1]+sum(tab[1,2]))
+  print(paste('TrainAccuracy',train_accuracy*100))
+  print(paste('Precision',precision_test*100))
+  #print(paste('recall',recall*100))
+  
+  }
+ 
+  #ROC 
+  trainingData<-data.frame(trainingData)
+  testData<-data.frame(testData)
+  mylogit <- glm(V1~., data = trainingData, family = "binomial",control=list(maxit=50))
+  p<-predict(mylogit, newdata=testData, type="response",se.fit=FALSE)
+  threshold=0.60
+  prediction<-sapply(p, FUN=function(x) if (x>threshold) 2 else 1)
+  roc_obj<-roc(testData$V1,prediction)
+  plot.roc(roc_obj,print.auc = TRUE)
+
+

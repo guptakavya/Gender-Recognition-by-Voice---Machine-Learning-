@@ -1,0 +1,38 @@
+voice <- read.csv(file="C:/Users/sri21arun/Desktop/UTD/Machine Learning/Project/voice.csv")
+#is.na(voice)
+voice[!complete.cases(voice),]
+
+library(caret)
+nearZeroVar(voice[, -21], saveMetrics = TRUE)
+
+
+#--- OUTPUT
+
+> voice <- read.csv(file="C:/Users/sri21arun/Desktop/UTD/Machine Learning/Project/voice.csv")
+> voice[!complete.cases(voice),]
+ [1] meanfreq sd       median   Q25      Q75      IQR      skew     kurt     sp.ent   sfm      mode    
+[12] centroid meanfun  minfun   maxfun   meandom  mindom   maxdom   dfrange  modindx  label   
+<0 rows> (or 0-length row.names)
+> library(caret)
+> nearZeroVar(voice[, -21], saveMetrics = TRUE)
+         freqRatio percentUnique zeroVar   nzv
+meanfreq  1.000000     99.936869   FALSE FALSE
+sd        1.000000     99.936869   FALSE FALSE
+median    1.500000     97.127525   FALSE FALSE
+Q25       2.000000     97.948232   FALSE FALSE
+Q75       1.000000     95.770202   FALSE FALSE
+IQR       1.000000     97.001263   FALSE FALSE
+skew      1.000000     99.936869   FALSE FALSE
+kurt      1.000000     99.936869   FALSE FALSE
+sp.ent    1.000000     99.936869   FALSE FALSE
+sfm       1.000000     99.936869   FALSE FALSE
+mode     23.600000     89.172980   FALSE FALSE
+centroid  1.000000     99.936869   FALSE FALSE
+meanfun   1.000000     99.936869   FALSE FALSE
+minfun    1.084746     28.819444   FALSE FALSE
+maxfun    1.151515      3.882576   FALSE FALSE
+meandom  15.250000     94.665404   FALSE FALSE
+mindom    1.530713      2.430556   FALSE FALSE
+maxdom    2.904762     33.270202   FALSE FALSE
+dfrange   4.333333     34.438131   FALSE FALSE
+modindx  21.666667     97.190657   FALSE FALSE
