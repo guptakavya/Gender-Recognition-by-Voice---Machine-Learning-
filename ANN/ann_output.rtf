@@ -1,0 +1,94 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1504
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;\csgray\c100000;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 > nnetFit\
+Neural Network \
+\
+3168 samples\
+  20 predictor\
+   2 classes: '0', '1' \
+\
+No pre-processing\
+Resampling: Cross-Validated (10 fold) \
+Summary of sample sizes: 2850, 2851, 2851, 2851, 2850, 2852, ... \
+Resampling results across tuning parameters:\
+  size  decay  Accuracy   Kappa    \
+  1     0e+00  0.9368243  0.8518357\
+  1     1e-04  0.9763484  0.9494286\
+  1     1e-03  0.9649311  0.9234515\
+  1     1e-02  0.9759547  0.9486334\
+  1     1e-01  0.9747689  0.9460497\
+  3     0e+00  0.9783153  0.9534162\
+  3     1e-04  0.9822539  0.9622694\
+  3     1e-03  0.9767405  0.9501353\
+  3     1e-02  0.9818649  0.9610467\
+  3     1e-01  0.9783122  0.9535845\
+  5     0e+00  0.9826367  0.9625427\
+  5     1e-04  0.9885624  0.9754988\
+  5     1e-03  0.9830397  0.9635447\
+  5     1e-02  0.9854113  0.9687615\
+  5     1e-01  0.9822555  0.9620445\
+ 7     0e+00  0.9881687  0.9747035\
+  7     1e-04  0.9893530  0.9769751\
+  7     1e-03  0.9936868  0.9864410\
+  7     1e-02  0.9921182  0.9829117\
+  7     1e-01  0.9798886  0.9569869\
+  9     0e+00  0.9921120  0.9830820\
+  9     1e-04  0.9901404  0.9789430\
+  9     1e-03  0.9838443  0.9642360\
+  9     1e-02  0.9929056  0.9846032\
+  9     1e-01  0.9830475  0.9637300\
+Accuracy was used to select the optimal model using  the largest value.\
+The final values used for the model were size = 7 and decay = 0.001. \
+> nnetFit$finalModel\
+a 20-7-1 network with 155 weights\
+inputs: meanfreq sd median Q25 Q75 IQR skew kurt sp.ent sfm mode centroid meanfun minfun maxfun meandom mindom maxdom dfrange modindx \
+output(s): .outcome \
+options were - entropy fitting  decay=0.001\
+> plot(nnetFit)\
+> pred<-predict(nnetFit,newdata=testing)\
+> confusionMatrix(pred, testing$label)\
+$positive\
+[1] "0"\
+\
+$table\
+          Reference\
+Prediction   0   1\
+         0 312   2\
+         1   4 314\
+\
+$overall\
+      Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull \
+  9.905063e-01   9.810127e-01   9.794515e-01   9.965082e-01   5.000000e-01 \
+AccuracyPValue  McnemarPValue \
+ 4.896032e-177   6.830914e-01 \
+\
+$byClass\
+         Sensitivity          Specificity       Pos Pred Value       Neg Pred Value \
+           0.9873418            0.9936709            0.9936306            0.9874214 \
+           Precision               Recall                   F1           Prevalence \
+           0.9936306            0.9873418            0.9904762            0.5000000 \
+      Detection Rate Detection Prevalence    Balanced Accuracy \
+           0.4936709            0.4968354            0.9905063 \
+\
+$mode\
+[1] "sens_spec"\
+\
+$dots\
+list()\
+\
+attr(,"class")\
+[1] "confusionMatrix"\
+> nnetROC <- multiclass.roc(testing$label,as.numeric(nnetPredict))\
+> nnetROC\
+\
+Call:\
+multiclass.roc.default(response = testing$label, predictor = as.numeric(nnetPredict))\
+\
+Data: as.numeric(nnetPredict) with 2 levels of testing$label: 0, 1.\
+Multi-class area under the curve: 0.9905\
+> }
