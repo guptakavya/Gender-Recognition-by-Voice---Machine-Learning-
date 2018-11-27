@@ -1,0 +1,46 @@
+> RandomForestData=read.csv(file="C:/Users/sri21arun/Desktop/UTD/Machine Learning/Project/voice.csv")
+> library(class)
+> library(AUC)
+> library(caret)
+> library(gbm)
+> library(verification)
+> library(pROC)
+> library(AUCRF)
+> library(randomForest)
+> index <- sample(1:nrow(RandomForestData),0.8*nrow(RandomForestData))
+> train <- RandomForestData[index,]
+> test <- RandomForestData[-index,]
+> 
+> rf_tune <- tuneRF(train[,-21],train[,21],stepFactor = 1.5,improve = 1e-5,ntreeTry = 500)
+mtry = 4  OOB error = 2.01% 
+Searching left ...
+mtry = 3 	OOB error = 2.09% 
+-0.03921569 1e-05 
+Searching right ...
+mtry = 6 	OOB error = 2.09% 
+-0.03921569 1e-05 
+> 
+> #rf_tune
+> # Random Forest classifier
+> fit=randomForest(as.factor(label)~.,data=train,ntree=500,mtry=4,importance=TRUE)
+> prediction1=predict(fit,test,type="response")
+> 
+> predtable=table(prediction1,test[,21])
+> accuracy1=sum(diag(predtable)/sum(predtable))*100
+> print(paste("Accuracy",accuracy1))
+[1] "Accuracy 97.7917981072555"
+> #Precision
+> precs=(sum(diag(predtable))/(sum(diag(predtable))+predtable[3]))*100
+> print(paste("Precision",precs))
+[1] "Precision 98.7261146496815"
+> 
+> 
+> #AUC
+> library(ROCR)
+> pr = predict(fit,RandomForestData,type="prob")[,2]
+> auc1 <- performance(prediction(pr,RandomForestData$label),"auc")@y.values[[1]]
+> roc1 <- performance(prediction(pr,RandomForestData$label),"tpr","fpr")
+> plot(roc1)
+> accuracy2 <- auc1*100
+> print(paste("AUC Accuracy",accuracy2))
+[1] "AUC Accuracy 99.9586497870115"
